@@ -1,0 +1,104 @@
+# KISS-ICP Parameters Configuration
+# Based on the original KISS-ICP paper implementation
+
+kiss_icp:
+  ros__parameters:
+    # Core Algorithm Parameters
+    # LiDAR sensor maximum range in meters
+    max_range: 80.0
+
+    # Minimum deviation threshold for adaptive threshold calculation (meters)
+    min_deviation: 0.1
+
+    # Base voxel size (will be scaled by factors α and β)
+    # If set to 0.0, will be automatically set to 0.01 * max_range
+    voxel_size: 0.0
+
+    # Maximum ICP iterations
+    max_iterations: 50
+
+    # ICP convergence threshold
+    convergence_threshold: 0.0001
+
+    # Downsampling factors
+    # α factor for map merging (0.5 in paper)
+    alpha_factor: 0.5
+
+    # β factor for ICP registration (1.5 in paper)
+    beta_factor: 1.5
+
+    # Local map parameters
+    max_points_per_voxel: 20
+
+    # ROS Topic Configuration
+    cloud_topic: "/velodyne_points"
+
+    # Frame IDs
+    base_frame: "base_link"
+    odom_frame: "odom"
+    map_frame: "map"
+
+    # Publishing Options
+    publish_tf: true
+    publish_map: true
+    publish_deskewed: false # For debugging
+
+    # Publishing rates
+    map_publish_rate: 1.0 # Hz
+
+    # Debug and Logging
+    debug_mode: false
+    log_level: "info" # debug, info, warn, error
+
+    # Performance tuning
+    use_parallel_processing: true
+    num_threads: 0 # 0 for auto-detect
+
+# KITTI Player Parameters
+kitti_player:
+  ros__parameters:
+    # Dataset path - must be set via launch argument
+    dataset_path: "/path/to/kitti/dataset"
+
+    # Sequence to play
+    sequence: "00"
+
+    # Playback rate in Hz
+    publish_rate: 10.0
+
+    # Loop playback when reaching end
+    loop_playback: false
+
+    # Start playback automatically
+    auto_start: true
+
+    # Frame ID for published point clouds
+    frame_id: "velodyne"
+
+    # Topic to publish point clouds
+    cloud_topic: "/velodyne_points"
+
+# Evaluation Parameters
+evaluation:
+  ros__parameters:
+    # Evaluation frequency
+    evaluation_rate: 1.0 # Hz
+
+    # Results saving
+    save_results: true
+    results_directory: "/tmp/kiss_icp_results"
+
+    # Alignment parameters for trajectory evaluation
+    alignment_length: 100.0 # meters
+
+    # Distance threshold for RPE calculation
+    rpe_distance_threshold: 100.0 # meters
+
+    # Output formats
+    save_trajectory_kitti: true
+    save_trajectory_tum: true
+    save_plots: true
+
+    # Ground truth source
+    ground_truth_topic: "/ground_truth/pose"
+    use_kitti_ground_truth: true

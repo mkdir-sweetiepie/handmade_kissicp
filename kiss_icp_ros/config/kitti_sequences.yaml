@@ -1,0 +1,176 @@
+# KITTI Odometry Dataset Sequences Configuration
+# This file contains metadata for all KITTI odometry sequences
+
+sequences:
+  "00":
+    name: "Residential"
+    length_km: 3.73
+    frames: 4540
+    description: "Residential area with many turns"
+    environment: "urban"
+    difficulty: "medium"
+
+  "01":
+    name: "Highway"
+    length_km: 1.33
+    frames: 1100
+    description: "Highway driving with high speed"
+    environment: "highway"
+    difficulty: "easy"
+
+  "02":
+    name: "Residential"
+    length_km: 5.07
+    frames: 4660
+    description: "Residential area with mixed driving"
+    environment: "urban"
+    difficulty: "medium"
+
+  "03":
+    name: "Country Road"
+    length_km: 0.53
+    frames: 800
+    description: "Country road with curves"
+    environment: "rural"
+    difficulty: "medium"
+
+  "04":
+    name: "Residential"
+    length_km: 0.27
+    frames: 270
+    description: "Short residential sequence"
+    environment: "urban"
+    difficulty: "easy"
+
+  "05":
+    name: "Residential"
+    length_km: 2.21
+    frames: 2760
+    description: "Residential with parking maneuvers"
+    environment: "urban"
+    difficulty: "hard"
+
+  "06":
+    name: "Residential"
+    length_km: 1.24
+    frames: 1100
+    description: "Residential area with tight turns"
+    environment: "urban"
+    difficulty: "hard"
+
+  "07":
+    name: "Residential"
+    length_km: 0.69
+    frames: 1100
+    description: "Residential with complex intersections"
+    environment: "urban"
+    difficulty: "medium"
+
+  "08":
+    name: "Residential"
+    length_km: 3.22
+    frames: 4070
+    description: "Long residential sequence"
+    environment: "urban"
+    difficulty: "medium"
+
+  "09":
+    name: "Residential"
+    length_km: 1.71
+    frames: 1590
+    description: "Residential with loops"
+    environment: "urban"
+    difficulty: "hard"
+
+  "10":
+    name: "Residential"
+    length_km: 1.02
+    frames: 1200
+    description: "Residential with U-turns"
+    environment: "urban"
+    difficulty: "hard"
+
+# Evaluation sequences (with ground truth)
+evaluation_sequences:
+  ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10"]
+
+# Test sequences (without ground truth)
+test_sequences:
+  ["11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"]
+
+# Recommended sequences for different purposes
+recommended:
+  quick_test: ["04"] # Short sequence for quick testing
+  development: ["00", "02"] # Good for algorithm development
+  benchmarking: [
+      "00",
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10",
+    ] # Full evaluation
+  challenging: ["05", "06", "09", "10"] # Most challenging sequences
+
+# Dataset information
+dataset_info:
+  sensor: "Velodyne HDL-64E"
+  frequency: "10 Hz"
+  resolution: "64 channels"
+  range: "120 m"
+  accuracy: "±2 cm"
+  coordinate_system: "Velodyne frame (front-left-up)"
+
+# Calibration information
+calibration:
+  # These are example values - replace with actual calibration for each sequence
+  camera_intrinsic:
+    fx: 718.856
+    fy: 718.856
+    cx: 607.1928
+    cy: 185.2157
+
+  # Transformation from Velodyne to camera (example values)
+  T_cam_velo:
+    translation: [0.04, -0.05, -0.1] # [x, y, z] in meters
+    rotation: [-0.006, -0.001, 0.0] # [roll, pitch, yaw] in radians
+
+# Processing parameters per sequence type
+processing_params:
+  highway:
+    max_range: 120.0
+    voxel_size: 0.3
+    adaptive_threshold: true
+
+  urban:
+    max_range: 80.0
+    voxel_size: 0.2
+    adaptive_threshold: true
+
+  rural:
+    max_range: 100.0
+    voxel_size: 0.25
+    adaptive_threshold: true
+
+# File structure
+file_structure:
+  velodyne_dir: "velodyne"
+  poses_file: "poses.txt"
+  calib_file: "calib.txt"
+  times_file: "times.txt"
+
+# Evaluation metrics
+evaluation:
+  metrics:
+    - "ATE" # Absolute Trajectory Error
+    - "RPE" # Relative Pose Error
+    - "speed_accuracy"
+    - "rotation_accuracy"
+
+  rpe_distances: [100, 200, 300, 400, 500, 600, 700, 800] # meters
+  rpe_speeds: [10, 20, 30, 40] # km/h

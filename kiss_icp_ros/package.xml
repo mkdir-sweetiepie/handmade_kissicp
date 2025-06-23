@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>kiss_icp_ros</name>
+  <version>1.0.0</version>
+  <description>ROS 2 integration for KISS-ICP</description>
+
+  <maintainer email="hong091788@naver.com">홍지현</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  
+  <!-- ROS 2 의존성들 -->
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  
+  <!-- PCL 관련 의존성 -->
+  <depend>pcl_conversions</depend>
+  <depend>pcl_ros</depend>
+  
+  <!-- Eigen -->
+  <depend>eigen3_cmake_module</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

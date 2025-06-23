@@ -1,0 +1,47 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/hyeon/turtlebot3_ws/install/turtlebot3_fake_node/include/**",
+        "/home/hyeon/turtlebot3_ws/install/turtlebot3_msgs/include/**",
+        "/home/hyeon/turtlebot3_ws/install/robot_navigation/include/**",
+        "/home/hyeon/turtlebot3_ws/install/turtlebot3_gazebo/include/**",
+        "/home/hyeon/turtlebot3_ws/install/robot_msgs/include/**",
+        "/home/hyeon/turtlebot3_ws/install/dynamixel_sdk_custom_interfaces/include/**",
+        "/home/hyeon/turtlebot3_ws/install/dynamixel_sdk/include/**",
+        "/home/hyeon/colcon_ws/install/usb_cam/include/**",
+        "/home/hyeon/colcon_ws/install/ros2_hw/include/**",
+        "/home/hyeon/colcon_ws/install/realsense2_camera/include/**",
+        "/home/hyeon/colcon_ws/install/realsense2_camera_msgs/include/**",
+        "/home/hyeon/colcon_ws/install/kalibr_extended_camera_info_publisher/include/**",
+        "/home/hyeon/colcon_ws/install/image_projection/include/**",
+        "/home/hyeon/colcon_ws/install/kalibr_camera_loader/include/**",
+        "/home/hyeon/colcon_ws/install/kalibr_camera_model/include/**",
+        "/home/hyeon/colcon_ws/install/kalibr_image_geometry_msgs/include/**",
+        "/home/hyeon/colcon_ws/install/image_recognition_msgs/include/**",
+        "/home/hyeon/colcon_ws/install/image_projection_plugins/include/**",
+        "/home/hyeon/colcon_ws/install/image_projection_plugin_interface/include/**",
+        "/home/hyeon/colcon_ws/install/image_projection_msgs/include/**",
+        "/home/hyeon/harvest_ws/install/vision_msgs/include/**",
+        "/home/hyeon/harvest_ws/install/hardware_msgs/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/hyeon/kiss_icp_ws/src/handmade_kissicp/adaptive_threshold/include/**",
+        "/home/hyeon/kiss_icp_ws/src/handmade_kissicp/constant_velocity/include/**",
+        "/home/hyeon/kiss_icp_ws/src/handmade_kissicp/kiss_icp_voxel/include/**",
+        "/home/hyeon/kiss_icp_ws/src/handmade_kissicp/robust_icp/include/**",
+        "/home/hyeon/kiss_icp_ws/src/handmade_kissicp/scan_deskewing/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

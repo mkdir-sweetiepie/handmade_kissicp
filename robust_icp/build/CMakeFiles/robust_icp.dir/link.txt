@@ -1,0 +1,2 @@
+/usr/bin/ar qc librobust_icp.a CMakeFiles/robust_icp.dir/src/robust_icp.cpp.o
+/usr/bin/ranlib librobust_icp.a
