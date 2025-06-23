@@ -1,4 +1,0 @@
-/home/hyeon/kiss_icp_ws/src/scan_deskewing/build/CMakeFiles/scan_deskewer.dir
-/home/hyeon/kiss_icp_ws/src/scan_deskewing/build/CMakeFiles/test_scan_deskewing.dir
-/home/hyeon/kiss_icp_ws/src/scan_deskewing/build/CMakeFiles/edit_cache.dir
-/home/hyeon/kiss_icp_ws/src/scan_deskewing/build/CMakeFiles/rebuild_cache.dir

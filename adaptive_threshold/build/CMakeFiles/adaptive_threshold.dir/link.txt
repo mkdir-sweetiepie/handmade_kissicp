@@ -1,2 +1,0 @@
-/usr/bin/ar qc libadaptive_threshold.a CMakeFiles/adaptive_threshold.dir/src/adaptive_threshold.cpp.o
-/usr/bin/ranlib libadaptive_threshold.a

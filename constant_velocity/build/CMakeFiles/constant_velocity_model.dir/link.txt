@@ -1,2 +1,0 @@
-/usr/bin/ar qc libconstant_velocity_model.a CMakeFiles/constant_velocity_model.dir/src/constant_velocity_model.cpp.o
-/usr/bin/ranlib libconstant_velocity_model.a

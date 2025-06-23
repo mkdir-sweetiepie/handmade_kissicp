@@ -1,4 +1,0 @@
-/home/hyeon/kiss_icp_ws/src/constant_velocity/build/CMakeFiles/constant_velocity_model.dir
-/home/hyeon/kiss_icp_ws/src/constant_velocity/build/CMakeFiles/test_velocity_model.dir
-/home/hyeon/kiss_icp_ws/src/constant_velocity/build/CMakeFiles/edit_cache.dir
-/home/hyeon/kiss_icp_ws/src/constant_velocity/build/CMakeFiles/rebuild_cache.dir
