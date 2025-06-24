@@ -30,17 +30,24 @@ add_executable(kiss_icp_ros_node
   src/kitti_player_node.cpp
 )
 
-# 라이브러리 링크
+# FIXED: PCL만 직접 링크하고, ROS 2 패키지는 ament_target_dependencies 사용
 target_link_libraries(kiss_icp_ros_node
-  kiss_icp_core::kiss_icp_core
   ${PCL_LIBRARIES}
 )
 
-# ROS 2 의존성
+# ROS 2 의존성 + kiss_icp_core를 여기서 처리
 ament_target_dependencies(kiss_icp_ros_node
-  rclcpp sensor_msgs geometry_msgs nav_msgs
-  tf2 tf2_ros tf2_geometry_msgs visualization_msgs
-  pcl_conversions pcl_ros
+  rclcpp 
+  sensor_msgs 
+  geometry_msgs 
+  nav_msgs
+  tf2 
+  tf2_ros 
+  tf2_geometry_msgs 
+  visualization_msgs
+  pcl_conversions 
+  pcl_ros
+  kiss_icp_core
 )
 
 # 실행파일 설치

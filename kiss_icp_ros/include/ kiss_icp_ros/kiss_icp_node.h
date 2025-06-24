@@ -42,8 +42,8 @@ class KissICPNode : public rclcpp::Node {
   ~KissICPNode();
 
  private:
-  // Core KISS-ICP instance
-  std::unique_ptr<kiss_icp_core::KissICP> kiss_icp_;
+  // Core KISS-ICP instance - FIXED: removed namespace
+  std::unique_ptr<KissICP> kiss_icp_;
 
   // ROS 2 subscribers
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_sub_;
@@ -161,12 +161,6 @@ class KissICPNode : public rclcpp::Node {
    * @return Vector of normalized timestamps [0,1]
    */
   std::vector<float> extractTimestamps(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
-
-  /**
-   * @brief Log frame statistics
-   * @param stats Frame processing statistics
-   */
-  void logFrameStats(const kiss_icp_core::KissICP::FrameStats& stats);
 };
 
 }  // namespace kiss_icp_ros

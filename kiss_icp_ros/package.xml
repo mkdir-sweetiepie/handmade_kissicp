@@ -10,6 +10,9 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   
+  <!-- CRITICAL: Add kiss_icp_core dependency -->
+  <depend>kiss_icp_core</depend>
+  
   <!-- ROS 2 의존성들 -->
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>

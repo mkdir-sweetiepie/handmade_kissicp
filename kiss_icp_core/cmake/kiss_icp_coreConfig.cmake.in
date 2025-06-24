@@ -1,0 +1,10 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(eigen3_cmake_module)
+find_dependency(Eigen3)
+find_dependency(PCL)
+
+include("${CMAKE_CURRENT_LIST_DIR}/kiss_icp_coreTargets.cmake")
+
+check_required_components(kiss_icp_core)

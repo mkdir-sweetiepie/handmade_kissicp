@@ -7,46 +7,52 @@
 
 // 네임스페이스 사용 선언 추가
 using namespace evaluation;
-// 또는 using evaluation::OdometryEvaluator;
 
 void testOdometryEvaluator() {
   std::cout << "=== Odometry Evaluator 테스트 ===" << std::endl;
 
-  // Ground truth 궤적 생성 (직선 경로)
-  std::vector<Eigen::Matrix4f> ground_truth;
+  // Ground truth 궤적 생성 (직선 경로) - TrajectoryPose 형태로 변경
+  std::vector<TrajectoryPose> ground_truth;
   for (int i = 0; i < 10; ++i) {
-    Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-    pose(0, 3) = i * 1.0f;  // x축으로 1m씩 이동
-    ground_truth.push_back(pose);
+    Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
+    pose(0, 3) = i * 1.0;  // x축으로 1m씩 이동
+    double timestamp = i * 0.1;  // 10Hz 데이터 가정
+    ground_truth.emplace_back(timestamp, pose);
   }
 
-  // 추정 궤적 생성 (약간의 오차 포함)
-  std::vector<Eigen::Matrix4f> estimated;
+  // 추정 궤적 생성 (약간의 오차 포함) - TrajectoryPose 형태로 변경
+  std::vector<TrajectoryPose> estimated;
   for (int i = 0; i < 10; ++i) {
-    Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-    pose(0, 3) = i * 1.0f + (i * 0.01f);  // 작은 누적 오차
-    estimated.push_back(pose);
+    Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
+    pose(0, 3) = i * 1.0 + (i * 0.01);  // 작은 누적 오차
+    double timestamp = i * 0.1;  // 10Hz 데이터 가정
+    estimated.emplace_back(timestamp, pose);
   }
 
-  // 이제 네임스페이스 없이 사용 가능
   OdometryEvaluator evaluator;
 
-  // Ground truth 설정
+  // Ground truth 설정 - 올바른 메서드 사용
   evaluator.setGroundTruth(ground_truth);
 
-  // 추정 궤적 추가
-  for (const auto& pose : estimated) {
-    evaluator.addEstimatedPose(pose);
+  // 추정 궤적 설정 - 올바른 메서드 사용
+  evaluator.setEstimatedTrajectory(estimated);
+
+  // 평가 수행 - 올바른 메서드 사용
+  auto result = evaluator.evaluate();
+
+  // 결과 출력 - 실제 반환되는 구조체 사용
+  if (result.evaluation_success) {
+    std::cout << "평가 성공!" << std::endl;
+    std::cout << "ATE RMSE: " << result.ate_rmse << " m" << std::endl;
+    std::cout << "ATE Mean: " << result.ate_mean << " m" << std::endl;
+    std::cout << "ATE Median: " << result.ate_median << " m" << std::endl;
+    std::cout << "RPE Translation RMSE: " << result.rpe_translation.translation_rmse << " m" << std::endl;
+    std::cout << "RPE Rotation RMSE: " << result.rpe_rotation.rotation_rmse << " rad" << std::endl;
+    std::cout << "궤적 길이: " << result.trajectory_length << " m" << std::endl;
+    std::cout << "포즈 개수: " << result.num_poses << std::endl;
+  } else {
+    std::cout << "평가 실패: " << result.error_message << std::endl;
   }
-
-  // KITTI 메트릭 계산
-  auto metrics = evaluator.computeKITTIMetrics();
-
-  // 결과 출력
-  std::cout << "번역 오차 (상대): " << metrics.avg_translation_error << "%" << std::endl;
-  std::cout << "회전 오차 (상대): " << metrics.avg_rotation_error << " deg/m" << std::endl;
-  std::cout << "ATE 번역: " << metrics.ate_translation << " m" << std::endl;
-  std::cout << "ATE 회전: " << metrics.ate_rotation << " rad" << std::endl;
 
   std::cout << "Odometry Evaluator 테스트 완료!" << std::endl << std::endl;
 }
@@ -54,46 +60,62 @@ void testOdometryEvaluator() {
 void testRealTimeEvaluation() {
   std::cout << "=== 실시간 평가 테스트 ===" << std::endl;
 
-  OdometryEvaluator evaluator;
+  // 실시간 평가를 위해 궤적을 점진적으로 구축
+  std::vector<TrajectoryPose> ground_truth;
+  std::vector<TrajectoryPose> estimated;
 
-  // 실시간으로 포즈 추가 시뮬레이션
   std::cout << "실시간 odometry 평가 시뮬레이션..." << std::endl;
 
   for (int i = 0; i < 20; ++i) {
     // Ground truth 포즈 (이상적인 경로)
-    Eigen::Matrix4f gt_pose = Eigen::Matrix4f::Identity();
-    gt_pose(0, 3) = i * 0.5f;
-    gt_pose(1, 3) = sin(i * 0.1f) * 0.2f;  // 약간의 곡선
+    Eigen::Matrix4d gt_pose = Eigen::Matrix4d::Identity();
+    gt_pose(0, 3) = i * 0.5;
+    gt_pose(1, 3) = sin(i * 0.1) * 0.2;  // 약간의 곡선
+    double timestamp = i * 0.1;
 
     // 추정 포즈 (노이즈 포함)
-    Eigen::Matrix4f est_pose = gt_pose;
-    est_pose(0, 3) += (rand() % 100 - 50) * 0.001f;  // ±5cm 노이즈
-    est_pose(1, 3) += (rand() % 100 - 50) * 0.001f;
+    Eigen::Matrix4d est_pose = gt_pose;
+    est_pose(0, 3) += (rand() % 100 - 50) * 0.001;  // ±5cm 노이즈
+    est_pose(1, 3) += (rand() % 100 - 50) * 0.001;
 
-    // 포즈 추가
-    evaluator.addGroundTruthPose(gt_pose);
-    evaluator.addEstimatedPose(est_pose);
+    // 포즈를 벡터에 추가
+    ground_truth.emplace_back(timestamp, gt_pose);
+    estimated.emplace_back(timestamp, est_pose);
 
     // 10프레임마다 중간 결과 출력
     if ((i + 1) % 10 == 0) {
-      auto intermediate_metrics = evaluator.computeKITTIMetrics();
-      std::cout << "프레임 " << (i + 1) << " - 번역 오차: " 
-                << intermediate_metrics.avg_translation_error << "%" << std::endl;
+      OdometryEvaluator temp_evaluator;
+      temp_evaluator.setGroundTruth(ground_truth);
+      temp_evaluator.setEstimatedTrajectory(estimated);
+      
+      auto intermediate_result = temp_evaluator.evaluate();
+      if (intermediate_result.evaluation_success) {
+        std::cout << "프레임 " << (i + 1) << " - ATE RMSE: " 
+                  << intermediate_result.ate_rmse << " m" << std::endl;
+      }
     }
 
     // 실시간 시뮬레이션을 위한 짧은 대기
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
-  // 최종 메트릭 계산
-  auto final_metrics = evaluator.computeKITTIMetrics();
+  // 최종 평가
+  OdometryEvaluator final_evaluator;
+  final_evaluator.setGroundTruth(ground_truth);
+  final_evaluator.setEstimatedTrajectory(estimated);
+  auto final_result = final_evaluator.evaluate();
 
   std::cout << "\n=== 최종 평가 결과 ===" << std::endl;
-  std::cout << "총 프레임 수: 20" << std::endl;
-  std::cout << "평균 번역 오차: " << final_metrics.avg_translation_error << "%" << std::endl;
-  std::cout << "평균 회전 오차: " << final_metrics.avg_rotation_error << " deg/m" << std::endl;
-  std::cout << "절대 번역 오차 (ATE): " << final_metrics.ate_translation << " m" << std::endl;
-  std::cout << "절대 회전 오차 (ATE): " << final_metrics.ate_rotation << " rad" << std::endl;
+  if (final_result.evaluation_success) {
+    std::cout << "총 프레임 수: " << final_result.num_poses << std::endl;
+    std::cout << "ATE RMSE: " << final_result.ate_rmse << " m" << std::endl;
+    std::cout << "ATE Mean: " << final_result.ate_mean << " m" << std::endl;
+    std::cout << "RPE Translation RMSE: " << final_result.rpe_translation.translation_rmse << " m" << std::endl;
+    std::cout << "RPE Rotation RMSE: " << final_result.rpe_rotation.rotation_rmse << " rad" << std::endl;
+    std::cout << "궤적 길이: " << final_result.trajectory_length << " m" << std::endl;
+  } else {
+    std::cout << "최종 평가 실패: " << final_result.error_message << std::endl;
+  }
 
   std::cout << "실시간 평가 테스트 완료!" << std::endl;
 }
