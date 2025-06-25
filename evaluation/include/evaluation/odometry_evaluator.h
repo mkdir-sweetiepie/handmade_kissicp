@@ -15,6 +15,9 @@ struct TrajectoryPose {
   double timestamp;
   Eigen::Matrix4d pose;
 
+  // 기본 생성자 추가 (resize 함수에서 필요)
+  TrajectoryPose() : timestamp(0.0), pose(Eigen::Matrix4d::Identity()) {}
+  
   TrajectoryPose(double t, const Eigen::Matrix4d& p) : timestamp(t), pose(p) {}
 };
 
