@@ -23,7 +23,7 @@ find_package(kiss_icp_core REQUIRED)
 
 include_directories(include ${PCL_INCLUDE_DIRS})
 
-# 실행파일 생성
+# 실행파일 생성 - 모든 소스 파일 포함
 add_executable(kiss_icp_ros_node
   src/main.cpp
   src/kiss_icp_node.cpp
@@ -37,15 +37,15 @@ target_link_libraries(kiss_icp_ros_node
 
 # ROS 2 의존성 + kiss_icp_core를 여기서 처리
 ament_target_dependencies(kiss_icp_ros_node
-  rclcpp 
-  sensor_msgs 
-  geometry_msgs 
+  rclcpp
+  sensor_msgs
+  geometry_msgs
   nav_msgs
-  tf2 
-  tf2_ros 
-  tf2_geometry_msgs 
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
   visualization_msgs
-  pcl_conversions 
+  pcl_conversions
   pcl_ros
   kiss_icp_core
 )

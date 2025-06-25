@@ -28,12 +28,19 @@ class KissICP {
   Eigen::Matrix4f current_pose_;
   float scan_duration_;
   float max_range_;
+  PointCloud previous_scan_;  // 추가: 이전 스캔 저장
 
   // Helper functions
   PointCloud downsamplePoints(const PointCloud& points, VoxelGrid& filter);
   pcl::PointCloud<pcl::PointXYZ>::Ptr convertToPCL(const PointCloud& points);
   PointCloud convertFromPCL(const pcl::PointCloud<pcl::PointXYZ>::Ptr& pcl_cloud);
   Eigen::Matrix4f computePoseDeviation(const Eigen::Matrix4f& predicted, const Eigen::Matrix4f& actual);
+  
+  // 추가: 누락된 private 함수들
+  PointCloud filterByDistance(const PointCloud& points);
+  OdometryResult initializeFirstFrame(const PointCloud& scan);
+  OdometryResult performICP(const PointCloud& source, const PointCloud& target, const Eigen::Matrix4f& initial_guess);
+  bool isValidTransform(const Eigen::Matrix4f& transform);
 
  public:
   KissICP();

@@ -35,7 +35,7 @@ class RobustICP {
   // 대응점 찾기
   std::vector<std::pair<int, int>> findCorrespondences(const pcl::PointCloud<pcl::PointXYZ>::Ptr& source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr& target_cloud,
                                                        const Eigen::Matrix4f& transform, float max_distance);
-
+  bool isValidTransformation(const Eigen::Matrix4f& transform);
   // Geman-McClure 커널 가중치 계산
   float gemanMcClureWeight(float error_squared);
 
