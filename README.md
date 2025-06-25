@@ -216,19 +216,12 @@ ls -la dataset/sequences/00/velodyne/
 
 #### KITTI 평가 실행
 ```bash
-# 전체 평가 시스템 실행
-ros2 launch kiss_icp_ros kitti_evaluation.launch.py \
-    dataset_path:=~/datasets/kitti/dataset \
-    sequence:=00 \
-    use_rviz:=true
-
-# 또는 개별 실행
-# 터미널 1: KITTI 플레이어
-ros2 run kiss_icp_ros kiss_icp_ros_node player \
-    --ros-args -p dataset_path:=~/datasets/kitti/dataset -p sequence:=00
-
-# 터미널 2: KISS-ICP 노드
-ros2 run kiss_icp_ros kiss_icp_ros_node
+cd ~/kiss_icp_ws/src/handmade_kissicp/evaluation/
+rm -rf build
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+./test_evaluation
 ```
 
 ## 설정 및 튜닝
