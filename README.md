@@ -222,6 +222,9 @@ mkdir build && cd build
 cmake ..
 make -j$(nproc)
 ./test_evaluation
+
+python3 scripts/csv_visualizer.py --csv ~/kiss_icp_ws/results/sequence_00/trajectory_comparison.csv --output ~/kiss_icp_ws/results/sequence_00/plots --kitti-style --show
+
 ```
 
 ## 설정 및 튜닝
