@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-KISS-ICP 궤적 시각화 스크립트
+KISS-ICP 궤적 시각화 스크립트 (수정된 버전)
+matplotlib 스타일 오류 해결
 """
 
 import numpy as np
@@ -13,13 +14,21 @@ import sys
 from typing import List, Tuple, Optional
 import glob
 
-
 class TrajectoryVisualizer:
     def __init__(self, figsize=(15, 10)):
         self.figsize = figsize
-        plt.style.use(
-            "seaborn-v0_8" if "seaborn-v0_8" in plt.style.available else "seaborn"
-        )
+        # 스타일 설정 - 안전한 방법으로 수정
+        try:
+            plt.style.use('seaborn-v0_8-whitegrid')
+        except:
+            try:
+                plt.style.use('seaborn-whitegrid')
+            except:
+                try:
+                    plt.style.use('seaborn')
+                except:
+                    plt.style.use('default')
+                    print("기본 matplotlib 스타일을 사용합니다.")
 
     def load_trajectory_tum(self, filepath: str) -> np.ndarray:
         """TUM 형식의 궤적 파일 로드 (timestamp x y z qx qy qz qw)"""
@@ -91,8 +100,8 @@ class TrajectoryVisualizer:
             ax1.plot(
                 ground_truth[:, 0],
                 ground_truth[:, 1],
-                "b-",
-                linewidth=2,
+                "g-",
+                linewidth=3,
                 label="Ground Truth",
                 alpha=0.8,
             )
@@ -100,16 +109,16 @@ class TrajectoryVisualizer:
             ax1.plot(
                 estimated[:, 0],
                 estimated[:, 1],
-                "r-",
+                "r--",
                 linewidth=2,
-                label="Estimated",
+                label="KISS-ICP",
                 alpha=0.8,
             )
 
-        ax1.set_xlabel("X (m)")
-        ax1.set_ylabel("Y (m)")
-        ax1.set_title(f"{title} - 전체 궤적")
-        ax1.legend()
+        ax1.set_xlabel("X (m)", fontsize=12)
+        ax1.set_ylabel("Y (m)", fontsize=12)
+        ax1.set_title(f"{title} - 전체 궤적", fontsize=14, fontweight='bold')
+        ax1.legend(fontsize=11)
         ax1.grid(True, alpha=0.3)
         ax1.axis("equal")
 
@@ -124,93 +133,27 @@ class TrajectoryVisualizer:
                 ground_truth[:min_len, 0],
                 ground_truth[:min_len, 1],
                 c=errors,
-                cmap="hot",
-                s=20,
+                cmap="RdYlGn_r",
+                s=30,
                 alpha=0.7,
+                edgecolors='black',
+                linewidth=0.5
             )
-            ax2.set_xlabel("X (m)")
-            ax2.set_ylabel("Y (m)")
-            ax2.set_title(f"{title} - 오차 히트맵")
+            ax2.set_xlabel("X (m)", fontsize=12)
+            ax2.set_ylabel("Y (m)", fontsize=12)
+            ax2.set_title(f"{title} - 오차 히트맵", fontsize=14, fontweight='bold')
             ax2.axis("equal")
             ax2.grid(True, alpha=0.3)
 
             # 컬러바 추가
             cbar = plt.colorbar(scatter, ax=ax2)
-            cbar.set_label("Position Error (m)")
+            cbar.set_label("Position Error (m)", fontsize=11)
 
         plt.tight_layout()
 
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches="tight")
             print(f"2D 궤적 플롯 저장됨: {save_path}")
-
-        return fig
-
-    def plot_3d_trajectory(
-        self,
-        ground_truth: np.ndarray,
-        estimated: np.ndarray,
-        title: str = "3D Trajectory Comparison",
-        save_path: Optional[str] = None,
-    ):
-        """3D 궤적 비교 플롯"""
-        fig = plt.figure(figsize=self.figsize)
-        ax = fig.add_subplot(111, projection="3d")
-
-        if len(ground_truth) > 0:
-            ax.plot(
-                ground_truth[:, 0],
-                ground_truth[:, 1],
-                ground_truth[:, 2],
-                "b-",
-                linewidth=2,
-                label="Ground Truth",
-                alpha=0.8,
-            )
-
-        if len(estimated) > 0:
-            ax.plot(
-                estimated[:, 0],
-                estimated[:, 1],
-                estimated[:, 2],
-                "r-",
-                linewidth=2,
-                label="Estimated",
-                alpha=0.8,
-            )
-
-        ax.set_xlabel("X (m)")
-        ax.set_ylabel("Y (m)")
-        ax.set_zlabel("Z (m)")
-        ax.set_title(f"{title} - 3D 궤적")
-        ax.legend()
-
-        # 시작점과 끝점 표시
-        if len(ground_truth) > 0:
-            ax.scatter(
-                ground_truth[0, 0],
-                ground_truth[0, 1],
-                ground_truth[0, 2],
-                c="green",
-                s=100,
-                marker="o",
-                label="Start",
-            )
-            ax.scatter(
-                ground_truth[-1, 0],
-                ground_truth[-1, 1],
-                ground_truth[-1, 2],
-                c="red",
-                s=100,
-                marker="s",
-                label="End",
-            )
-
-        plt.tight_layout()
-
-        if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches="tight")
-            print(f"3D 궤적 플롯 저장됨: {save_path}")
 
         return fig
 
@@ -227,197 +170,72 @@ class TrajectoryVisualizer:
             return None
 
         min_len = min(len(ground_truth), len(estimated))
-        gt_truncated = ground_truth[:min_len]
-        est_truncated = estimated[:min_len]
-
+        gt = ground_truth[:min_len]
+        est = estimated[:min_len]
+        
         # 오차 계산
-        position_errors = np.linalg.norm(gt_truncated - est_truncated, axis=1)
-        x_errors = np.abs(gt_truncated[:, 0] - est_truncated[:, 0])
-        y_errors = np.abs(gt_truncated[:, 1] - est_truncated[:, 1])
-        z_errors = (
-            np.abs(gt_truncated[:, 2] - est_truncated[:, 2])
-            if gt_truncated.shape[1] > 2
-            else None
-        )
-
-        # 누적 거리 계산
+        errors = np.linalg.norm(gt - est, axis=1)
+        
+        # 거리 계산
         distances = np.zeros(min_len)
         for i in range(1, min_len):
-            distances[i] = distances[i - 1] + np.linalg.norm(
-                gt_truncated[i] - gt_truncated[i - 1]
-            )
+            distances[i] = distances[i-1] + np.linalg.norm(gt[i] - gt[i-1])
 
-        # 플롯 생성
-        fig, axes = plt.subplots(2, 2, figsize=self.figsize)
-
-        # 전체 위치 오차
-        axes[0, 0].plot(distances, position_errors, "r-", linewidth=1.5)
-        axes[0, 0].set_xlabel("Distance (m)")
-        axes[0, 0].set_ylabel("Position Error (m)")
-        axes[0, 0].set_title("Position Error vs Distance")
-        axes[0, 0].grid(True, alpha=0.3)
-
-        # 축별 오차
-        axes[0, 1].plot(distances, x_errors, "r-", label="X Error", alpha=0.7)
-        axes[0, 1].plot(distances, y_errors, "g-", label="Y Error", alpha=0.7)
-        if z_errors is not None:
-            axes[0, 1].plot(distances, z_errors, "b-", label="Z Error", alpha=0.7)
-        axes[0, 1].set_xlabel("Distance (m)")
-        axes[0, 1].set_ylabel("Error (m)")
-        axes[0, 1].set_title("Axis-wise Errors")
-        axes[0, 1].legend()
-        axes[0, 1].grid(True, alpha=0.3)
-
-        # 오차 히스토그램
-        axes[1, 0].hist(
-            position_errors, bins=50, alpha=0.7, color="red", edgecolor="black"
-        )
-        axes[1, 0].set_xlabel("Position Error (m)")
-        axes[1, 0].set_ylabel("Frequency")
-        axes[1, 0].set_title("Error Distribution")
-        axes[1, 0].grid(True, alpha=0.3)
-
-        # 통계 정보
-        mean_error = np.mean(position_errors)
-        max_error = np.max(position_errors)
-        rmse = np.sqrt(np.mean(position_errors**2))
-        std_error = np.std(position_errors)
-
-        stats_text = f"Statistics:\\n"
-        stats_text += f"Mean Error: {mean_error:.4f} m\\n"
-        stats_text += f"Max Error: {max_error:.4f} m\\n"
-        stats_text += f"RMSE: {rmse:.4f} m\\n"
-        stats_text += f"Std Dev: {std_error:.4f} m\\n"
-        stats_text += f"Total Distance: {distances[-1]:.2f} m"
-
-        axes[1, 1].text(
-            0.1,
-            0.5,
-            stats_text,
-            transform=axes[1, 1].transAxes,
-            fontsize=12,
-            verticalalignment="center",
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7),
-        )
-        axes[1, 1].set_xlim(0, 1)
-        axes[1, 1].set_ylim(0, 1)
-        axes[1, 1].axis("off")
-        axes[1, 1].set_title("Error Statistics")
-
-        plt.suptitle(f"{title}", fontsize=16)
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=self.figsize)
+        
+        # 1. 거리별 오차
+        ax1.plot(distances, errors, 'b-', linewidth=2, alpha=0.8)
+        ax1.set_xlabel('Distance (m)', fontsize=12)
+        ax1.set_ylabel('Position Error (m)', fontsize=12)
+        ax1.set_title('Error vs Distance', fontsize=13, fontweight='bold')
+        ax1.grid(True, alpha=0.3)
+        
+        # 2. 오차 히스토그램
+        ax2.hist(errors, bins=30, color='skyblue', alpha=0.7, edgecolor='black')
+        ax2.axvline(np.mean(errors), color='red', linestyle='--', linewidth=2, 
+                   label=f'Mean: {np.mean(errors):.4f}m')
+        ax2.axvline(np.median(errors), color='green', linestyle='--', linewidth=2,
+                   label=f'Median: {np.median(errors):.4f}m')
+        ax2.set_xlabel('Position Error (m)', fontsize=12)
+        ax2.set_ylabel('Frequency', fontsize=12)
+        ax2.set_title('Error Distribution', fontsize=13, fontweight='bold')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        
+        # 3. 시간별 오차
+        ax3.plot(range(min_len), errors, 'g-', linewidth=2, alpha=0.8)
+        ax3.set_xlabel('Frame Index', fontsize=12)
+        ax3.set_ylabel('Position Error (m)', fontsize=12)
+        ax3.set_title('Error vs Time', fontsize=13, fontweight='bold')
+        ax3.grid(True, alpha=0.3)
+        
+        # 4. 통계 정보
+        ax4.axis('off')
+        stats_text = f"""
+        Statistics:
+        ═══════════════════
+        Mean Error: {np.mean(errors):.4f} m
+        Median Error: {np.median(errors):.4f} m
+        Std Error: {np.std(errors):.4f} m
+        Max Error: {np.max(errors):.4f} m
+        Min Error: {np.min(errors):.4f} m
+        RMSE: {np.sqrt(np.mean(errors**2)):.4f} m
+        
+        Trajectory Length: {distances[-1]:.1f} m
+        Number of Poses: {min_len}
+        """
+        ax4.text(0.1, 0.5, stats_text, fontsize=12, fontfamily='monospace',
+                verticalalignment='center', bbox=dict(boxstyle="round,pad=0.5", 
+                facecolor="lightgray", alpha=0.8))
+        
+        plt.suptitle(f'{title} - Detailed Analysis', fontsize=16, fontweight='bold')
         plt.tight_layout()
-
+        
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches="tight")
             print(f"오차 분석 플롯 저장됨: {save_path}")
-
+        
         return fig
-
-    def plot_sequence_comparison(
-        self, results_dir: str, sequences: List[str], save_path: Optional[str] = None
-    ):
-        """여러 시퀀스의 결과 비교"""
-        if not sequences:
-            print("비교할 시퀀스가 없습니다.")
-            return None
-
-        fig, axes = plt.subplots(2, 2, figsize=self.figsize)
-
-        colors = plt.cm.tab10(np.linspace(0, 1, len(sequences)))
-
-        for i, seq in enumerate(sequences):
-            seq_dir = os.path.join(results_dir, f"sequence_{seq}")
-            gt_file = os.path.join(seq_dir, "ground_truth.txt")
-            est_file = os.path.join(seq_dir, "estimated.txt")
-
-            if not (os.path.exists(gt_file) and os.path.exists(est_file)):
-                print(f"시퀀스 {seq}의 파일을 찾을 수 없습니다.")
-                continue
-
-            gt = self.load_trajectory(gt_file)
-            est = self.load_trajectory(est_file)
-
-            if len(gt) == 0 or len(est) == 0:
-                continue
-
-            # 시작점을 원점으로 이동
-            gt_norm = gt - gt[0]
-            est_norm = est - est[0]
-
-            # 2D 궤적 플롯
-            axes[0, 0].plot(
-                gt_norm[:, 0],
-                gt_norm[:, 1],
-                color=colors[i],
-                linestyle="-",
-                alpha=0.8,
-                linewidth=2,
-                label=f"Seq {seq}",
-            )
-
-            # 오차 계산 및 플롯
-            min_len = min(len(gt), len(est))
-            errors = np.linalg.norm(gt[:min_len] - est[:min_len], axis=1)
-
-            distances = np.zeros(min_len)
-            for j in range(1, min_len):
-                distances[j] = distances[j - 1] + np.linalg.norm(gt[j] - gt[j - 1])
-
-            axes[0, 1].plot(
-                distances,
-                errors,
-                color=colors[i],
-                alpha=0.8,
-                linewidth=2,
-                label=f"Seq {seq}",
-            )
-
-            # 통계 수집
-            mean_error = np.mean(errors)
-            rmse = np.sqrt(np.mean(errors**2))
-
-            axes[1, 0].bar(
-                i, mean_error, color=colors[i], alpha=0.7, label=f"Seq {seq}"
-            )
-            axes[1, 1].bar(i, rmse, color=colors[i], alpha=0.7, label=f"Seq {seq}")
-
-        # 플롯 설정
-        axes[0, 0].set_xlabel("X (m)")
-        axes[0, 0].set_ylabel("Y (m)")
-        axes[0, 0].set_title("Trajectory Comparison (Normalized)")
-        axes[0, 0].legend()
-        axes[0, 0].grid(True, alpha=0.3)
-        axes[0, 0].axis("equal")
-
-        axes[0, 1].set_xlabel("Distance (m)")
-        axes[0, 1].set_ylabel("Position Error (m)")
-        axes[0, 1].set_title("Position Error vs Distance")
-        axes[0, 1].legend()
-        axes[0, 1].grid(True, alpha=0.3)
-
-        axes[1, 0].set_xlabel("Sequence")
-        axes[1, 0].set_ylabel("Mean Error (m)")
-        axes[1, 0].set_title("Mean Position Error by Sequence")
-        axes[1, 0].set_xticks(range(len(sequences)))
-        axes[1, 0].set_xticklabels(sequences)
-        axes[1, 0].grid(True, alpha=0.3)
-
-        axes[1, 1].set_xlabel("Sequence")
-        axes[1, 1].set_ylabel("RMSE (m)")
-        axes[1, 1].set_title("RMSE by Sequence")
-        axes[1, 1].set_xticks(range(len(sequences)))
-        axes[1, 1].set_xticklabels(sequences)
-        axes[1, 1].grid(True, alpha=0.3)
-
-        plt.suptitle("KISS-ICP Multi-Sequence Comparison", fontsize=16)
-        plt.tight_layout()
-
-        if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches="tight")
-            print(f"시퀀스 비교 플롯 저장됨: {save_path}")
-
-        return fig
-
 
 def main():
     parser = argparse.ArgumentParser(description="KISS-ICP 궤적 시각화 도구")
@@ -435,8 +253,6 @@ def main():
         "--title", type=str, default="KISS-ICP Trajectory", help="플롯 제목"
     )
     parser.add_argument("--show", action="store_true", help="플롯 화면에 표시")
-    parser.add_argument("--sequences", type=str, nargs="*", help="비교할 시퀀스 목록")
-    parser.add_argument("--results_dir", type=str, help="결과 디렉토리 (시퀀스 비교용)")
 
     args = parser.parse_args()
 
@@ -445,59 +261,40 @@ def main():
 
     visualizer = TrajectoryVisualizer()
 
-    if args.results_dir and args.sequences:
-        # 다중 시퀀스 비교
-        fig = visualizer.plot_sequence_comparison(
-            args.results_dir,
-            args.sequences,
-            os.path.join(args.output, "sequence_comparison.png"),
-        )
-    else:
-        # 단일 궤적 분석
-        print(f"Ground Truth 로드 중: {args.gt}")
-        ground_truth = visualizer.load_trajectory(args.gt, args.format)
+    print(f"Ground Truth 로드 중: {args.gt}")
+    ground_truth = visualizer.load_trajectory(args.gt, args.format)
 
-        print(f"추정 궤적 로드 중: {args.est}")
-        estimated = visualizer.load_trajectory(args.est, args.format)
+    print(f"추정 궤적 로드 중: {args.est}")
+    estimated = visualizer.load_trajectory(args.est, args.format)
 
-        if len(ground_truth) == 0 and len(estimated) == 0:
-            print("로드할 수 있는 데이터가 없습니다.")
-            return 1
+    if len(ground_truth) == 0 and len(estimated) == 0:
+        print("로드할 수 있는 데이터가 없습니다.")
+        return 1
 
-        print(f"Ground Truth 포인트 수: {len(ground_truth)}")
-        print(f"추정 궤적 포인트 수: {len(estimated)}")
+    print(f"Ground Truth 포인트 수: {len(ground_truth)}")
+    print(f"추정 궤적 포인트 수: {len(estimated)}")
 
-        # 2D 궤적 플롯
-        visualizer.plot_2d_trajectory(
-            ground_truth,
-            estimated,
-            args.title,
-            os.path.join(args.output, "2d_trajectory.png"),
-        )
+    # 2D 궤적 플롯
+    visualizer.plot_2d_trajectory(
+        ground_truth,
+        estimated,
+        args.title,
+        os.path.join(args.output, "2d_trajectory.png"),
+    )
 
-        # 3D 궤적 플롯 (데이터가 3D인 경우)
-        if len(ground_truth) > 0 and ground_truth.shape[1] >= 3:
-            visualizer.plot_3d_trajectory(
-                ground_truth,
-                estimated,
-                args.title,
-                os.path.join(args.output, "3d_trajectory.png"),
-            )
-
-        # 오차 분석
-        visualizer.plot_error_analysis(
-            ground_truth,
-            estimated,
-            args.title,
-            os.path.join(args.output, "error_analysis.png"),
-        )
+    # 오차 분석
+    visualizer.plot_error_analysis(
+        ground_truth,
+        estimated,
+        args.title,
+        os.path.join(args.output, "error_analysis.png"),
+    )
 
     if args.show:
         plt.show()
 
     print(f"모든 플롯이 {args.output}에 저장되었습니다.")
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
