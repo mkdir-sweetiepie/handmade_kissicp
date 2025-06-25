@@ -3,35 +3,42 @@
 <package format="3">
   <name>kiss_icp_ros</name>
   <version>1.0.0</version>
-  <description>ROS 2 integration for KISS-ICP</description>
+  <description>Complete ROS 2 integration for KISS-ICP LiDAR odometry with KITTI dataset support</description>
 
   <maintainer email="hong091788@naver.com">홍지현</maintainer>
-  <license>MIT</license>
+  <license>Apache-2.0</license>
+
+  <author email="hong091788@naver.com">홍지현</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  
-  <!-- CRITICAL: Add kiss_icp_core dependency -->
+
+  <!-- Core KISS-ICP dependency -->
   <depend>kiss_icp_core</depend>
-  
-  <!-- ROS 2 의존성들 -->
+
+  <!-- ROS 2 core dependencies -->
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>visualization_msgs</depend>
+
+  <!-- TF2 dependencies -->
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>tf2_geometry_msgs</depend>
-  <depend>visualization_msgs</depend>
-  
-  <!-- PCL 관련 의존성 -->
+
+  <!-- PCL dependencies -->
   <depend>pcl_conversions</depend>
   <depend>pcl_ros</depend>
-  
-  <!-- Eigen -->
+
+  <!-- Eigen3 dependency -->
   <depend>eigen3_cmake_module</depend>
 
+  <!-- Testing dependencies -->
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

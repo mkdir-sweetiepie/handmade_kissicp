@@ -6,7 +6,7 @@
   <description>Core KISS-ICP algorithm implementation integrating all components</description>
 
   <maintainer email="hong091788@naver.com">홍지현</maintainer>
-  <license>MIT</license>
+  <license>Apache-2.0</license>
 
   <author>홍지현</author>
 
