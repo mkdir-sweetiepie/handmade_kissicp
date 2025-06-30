@@ -1,0 +1,2 @@
+/usr/bin/ar qc libvoxel_grid.a CMakeFiles/voxel_grid.dir/src/voxel_grid.cpp.o
+/usr/bin/ranlib libvoxel_grid.a

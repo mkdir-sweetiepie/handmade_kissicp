@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>evaluation</name>
+  <version>1.0.0</version>
+  <description>Performance evaluation tools for KISS-ICP odometry system</description>
+
+  <maintainer email="hong091788@naver.com">홍지현</maintainer>
+  <license>MIT</license>
+
+  <author>홍지현</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>eigen3_cmake_module</depend>
+  <depend>kiss_icp_core</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

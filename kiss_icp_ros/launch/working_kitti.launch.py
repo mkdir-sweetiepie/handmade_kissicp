@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-수정된 KISS-ICP launch 파일 - ICP 발산 문제 해결
+KISS-ICP launch 파일 - Local Map 시각화 포함
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -9,64 +9,46 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    # KITTI 플레이어 노드 (안정적인 속도)
+    # KITTI 플레이어 노드
     player_node = Node(
         package="kiss_icp_ros",
         executable="kiss_icp_ros_node",
-        name="kitti_player_optimized",
+        name="kitti_player",
         arguments=["player"],
         parameters=[
             {
-                "data_path": "/home/hyeon/kiss_icp_ws/src/data_odometry_velodyne/dataset/sequences/05",
-                "publish_rate": 1.0,  # 2Hz → 1Hz로 더 안정하게
+                "dataset_path": "/home/hyeon/kiss_icp_ws/src/data_odometry_velodyne/dataset/sequences/00",
+                "publish_rate": 3.0,
                 "frame_id": "velodyne",
-                "loop": False,
-                "start_frame": 0,  # 첫 번째 프레임부터 시작
-                "max_frames": 100,  # 테스트용으로 100프레임만
+                "loop_playback": True,
+                "auto_start": True,
             }
         ],
         output="screen",
     )
 
-    # KISS-ICP 노드 (ICP 발산 방지 파라미터)
+    # KISS-ICP 노드 (namespace와 토픽 매핑 적용)
     kiss_icp_node = Node(
         package="kiss_icp_ros",
         executable="kiss_icp_ros_node",
-        name="kiss_icp_optimized",
+        name="kiss_icp",
+        namespace="kiss_icp",  # namespace 추가
         parameters=[
             {
-                # 기본 프레임 설정
-                "odom_frame": "odom",
-                "base_frame": "base_link",
-                # 핵심 ICP 파라미터 (발산 방지)
-                "max_range": 30.0,  # 60 → 30으로 줄임 (안정성 향상)
-                "voxel_size": 0.3,  # 0.5 → 0.3으로 세밀화
-                "max_iterations": 15,  # ICP 최대 반복 횟수 제한
-                "convergence_criteria": 5e-4,  # 수렴 조건 완화
-                # Robust ICP 파라미터
-                "scale_parameter": 0.05,  # Geman-McClure 커널 스케일
-                "robust_kernel": True,  # 강인 커널 활성화
-                # Adaptive Threshold 파라미터
-                "adaptive_threshold": True,  # 적응적 임계값 사용
-                "min_motion_threshold": 0.1,  # 최소 움직임 임계값
-                "sigma_multiplier": 2.5,  # 3σ → 2.5σ로 완화
-                # 다운샘플링 파라미터
-                "downsample_ratio": 0.8,  # 다운샘플링 비율
-                "min_points_threshold": 1000,  # 최소 포인트 수
-                # 초기화 및 안정성 파라미터
-                "scan_duration": 0.1,
-                "min_deviation": 0.3,  # 0.5 → 0.3으로 더 민감하게
-                "initial_threshold": 2.0,  # 초기 대응점 검색 거리
-                "max_correspondence_distance": 1.0,  # 최대 대응점 거리
-                # 디버그 옵션
-                "verbose": True,  # 상세 로그 출력
-                "debug_info": True,  # 디버그 정보 출력
+                "max_range": 100.0,
             }
+        ],
+        remappings=[
+            # 토픽 매핑 설정
+            ("pointcloud", "/pointcloud"),  # 입력: 글로벌 토픽 사용
+            ("odometry", "/kiss_icp/odometry"),  # 출력: namespace 포함
+            ("path", "/kiss_icp/trajectory"),  # 출력: RViz 설정과 일치
+            ("local_map", "/kiss_icp/local_map"),  # 출력: RViz 설정과 일치
         ],
         output="screen",
     )
 
-    # Static TF (변경 없음)
+    # Static TF
     static_tf = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
@@ -74,42 +56,42 @@ def generate_launch_description():
         arguments=["0", "0", "0", "0", "0", "0", "base_link", "velodyne"],
     )
 
-    # 포인트클라우드 전처리 노드 (추가)
-    preprocess_node = Node(
-        package="kiss_icp_ros",
-        executable="pointcloud_preprocessor",
-        name="pointcloud_preprocessor",
-        parameters=[
-            {
-                "filter_outliers": True,  # 이상치 제거
-                "outlier_radius": 0.5,  # 이상치 검출 반경
-                "outlier_min_neighbors": 3,  # 최소 이웃 수
-                "range_filter": True,  # 거리 필터
-                "min_range": 1.0,  # 최소 거리
-                "max_range": 30.0,  # 최대 거리
-            }
-        ],
-        remappings=[
-            ("input", "/pointcloud_raw"),
-            ("output", "/pointcloud_filtered"),
-        ],
+    # RViz2 노드 (설정 파일 포함)
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        arguments=["-d", "/path/to/kiss_icp_evaluation.rviz"],  # RViz 설정 파일 경로
+        output="screen",
     )
 
     return LaunchDescription(
         [
             # Launch arguments
             DeclareLaunchArgument(
-                "debug", default_value="false", description="Enable debug mode"
+                "dataset_path",
+                default_value="/home/hyeon/kiss_icp_ws/src/data_odometry_velodyne/dataset/sequences/00",
+                description="Path to KITTI dataset sequence",
             ),
             DeclareLaunchArgument(
-                "slow_mode",
+                "publish_rate",
+                default_value="3.0",
+                description="Rate to publish point clouds (Hz)",
+            ),
+            DeclareLaunchArgument(
+                "max_range",
+                default_value="100.0",
+                description="Maximum range for KISS-ICP processing",
+            ),
+            DeclareLaunchArgument(
+                "use_rviz",
                 default_value="true",
-                description="Use slow processing mode for stability",
+                description="Launch RViz2 for visualization",
             ),
             # Nodes
             player_node,
             kiss_icp_node,
             static_tf,
-            # preprocess_node,  # 필요시 주석 해제
+            rviz_node,
         ]
     )

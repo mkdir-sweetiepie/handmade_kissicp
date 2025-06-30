@@ -13,35 +13,9 @@
 #include "robust_icp/robust_icp.h"
 #include "scan_deskewing/scan_deskewer.h"
 
+namespace kiss_icp_core {
+
 class KissICP {
- private:
-  // 핵심 모듈들
-  ConstantVelocityModel velocity_model_;
-  ScanDeskewer deskewer_;
-  VoxelGrid map_voxel_filter_;  // α=0.5 for map update
-  VoxelGrid icp_voxel_filter_;  // β=1.5 for ICP
-  AdaptiveThreshold adaptive_threshold_;
-  RobustICP robust_icp_;
-
-  // 상태 관리
-  LocalMap local_map_;
-  Eigen::Matrix4f current_pose_;
-  float scan_duration_;
-  float max_range_;
-  PointCloud previous_scan_;  // 추가: 이전 스캔 저장
-
-  // Helper functions
-  PointCloud downsamplePoints(const PointCloud& points, VoxelGrid& filter);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr convertToPCL(const PointCloud& points);
-  PointCloud convertFromPCL(const pcl::PointCloud<pcl::PointXYZ>::Ptr& pcl_cloud);
-  Eigen::Matrix4f computePoseDeviation(const Eigen::Matrix4f& predicted, const Eigen::Matrix4f& actual);
-  
-  // 추가: 누락된 private 함수들
-  PointCloud filterByDistance(const PointCloud& points);
-  OdometryResult initializeFirstFrame(const PointCloud& scan);
-  OdometryResult performICP(const PointCloud& source, const PointCloud& target, const Eigen::Matrix4f& initial_guess);
-  bool isValidTransform(const Eigen::Matrix4f& transform);
-
  public:
   KissICP();
   ~KissICP() = default;
@@ -59,4 +33,33 @@ class KissICP {
 
   // 리셋
   void reset();
+
+ private:
+  // 핵심 5가지 모듈들
+  ConstantVelocityModel velocity_model_;
+  ScanDeskewer deskewer_;
+  VoxelGrid map_voxel_filter_;  // α=0.5 for map update
+  VoxelGrid icp_voxel_filter_;  // β=1.5 for ICP
+  AdaptiveThreshold adaptive_threshold_;
+  RobustICP robust_icp_;
+
+  // 상태 관리
+  LocalMap local_map_;
+  Eigen::Matrix4f current_pose_;
+  float scan_duration_;
+  float max_range_;
+  PointCloud previous_scan_;
+
+  // Helper functions
+  PointCloud downsamplePoints(const PointCloud& points, VoxelGrid& filter);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr convertToPCL(const PointCloud& points);
+  PointCloud convertFromPCL(const pcl::PointCloud<pcl::PointXYZ>::Ptr& pcl_cloud);
+  Eigen::Matrix4f computePoseDeviation(const Eigen::Matrix4f& predicted, const Eigen::Matrix4f& actual);
+
+  PointCloud filterByDistance(const PointCloud& points);
+  OdometryResult initializeFirstFrame(const PointCloud& scan);
+  OdometryResult performICP(const PointCloud& source, const PointCloud& target, const Eigen::Matrix4f& initial_guess);
+  bool isValidTransform(const Eigen::Matrix4f& transform);
 };
+
+}  // namespace kiss_icp_core

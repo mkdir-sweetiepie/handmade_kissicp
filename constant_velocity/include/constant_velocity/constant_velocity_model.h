@@ -17,6 +17,9 @@ class ConstantVelocityModel {
   Eigen::Vector3f getLinearVelocity() const;
   Eigen::Vector3f getAngularVelocity() const;
 
+  void initialize(const Eigen::Matrix4f& initial_pose) { addPose(initial_pose); }
+  void updatePose(const Eigen::Matrix4f& pose) { addPose(pose); }
+
   // 초기화 여부 확인
   bool isInitialized() const;
 

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libscan_deskewer.a CMakeFiles/scan_deskewer.dir/src/scan_deskewer.cpp.o
+/usr/bin/ranlib libscan_deskewer.a

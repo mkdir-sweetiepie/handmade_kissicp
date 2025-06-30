@@ -23,6 +23,8 @@ void ScanDeskewer::deskewPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, 
     float angle = angular_velocity.norm() * relative_time * scan_duration;
     Eigen::Matrix3f rotation;
 
+    // Rodrigues 공식에 따라 회전 행렬 계산
+    // 축-각도 표현을 회전행렬로 변환
     if (angle < 1e-8) {
       // 각도가 매우 작으면 회전 없음
       rotation = Eigen::Matrix3f::Identity();
@@ -30,7 +32,7 @@ void ScanDeskewer::deskewPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, 
       // 회전축 정규화
       Eigen::Vector3f axis = angular_velocity.normalized();
 
-      // Rodrigues 공식을 사용한 회전 행렬 계산
+      // Rodrigues 공식
       Eigen::Matrix3f K;
       K << 0, -axis(2), axis(1), axis(2), 0, -axis(0), -axis(1), axis(0), 0;
 
@@ -45,4 +47,4 @@ void ScanDeskewer::deskewPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, 
     cloud->points[i].y = deskewed_point(1);
     cloud->points[i].z = deskewed_point(2);
   }
-}
+} 

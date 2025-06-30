@@ -1,42 +1,32 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include <unordered_map>
-#include <vector>
+#include <deque>
 
 #include "odometry_types.h"
 
-// LocalMap 전용 VoxelKey (kiss_icp_voxel과 분리)
-struct LocalMapVoxelKey {
-  int x, y, z;
-
-  bool operator==(const LocalMapVoxelKey& other) const { 
-    return x == other.x && y == other.y && z == other.z; 
-  }
-};
-
-struct LocalMapVoxelHasher {
-  std::size_t operator()(const LocalMapVoxelKey& key) const { 
-    return std::hash<int>()(key.x) ^ (std::hash<int>()(key.y) << 1) ^ (std::hash<int>()(key.z) << 2); 
-  }
-};
+namespace kiss_icp_core {
 
 class LocalMap {
- private:
-  std::unordered_map<LocalMapVoxelKey, std::vector<Point3D>, LocalMapVoxelHasher> voxel_map_;
-  float voxel_size_;
-  int max_points_per_voxel_;
-  float max_range_;
-
-  LocalMapVoxelKey getVoxelKey(const Point3D& point) const;
-
  public:
-  LocalMap(float voxel_size = 0.1f, int max_points = 20, float max_range = 100.0f);
+  LocalMap();
 
   void addPoints(const PointCloud& points, const Eigen::Matrix4f& pose);
-  PointCloud getPointsInRange(const Eigen::Vector3f& center, float range);
-  void removeDistantVoxels(const Eigen::Vector3f& robot_position);
-
-  size_t size() const;
+  PointCloud getPointsInRange(const Eigen::Vector3f& center, float max_range) const;
   void clear();
+  size_t size() const;
+
+ private:
+  struct MapFrame {
+    PointCloud points;
+    Eigen::Matrix4f pose;
+    std::chrono::high_resolution_clock::time_point timestamp;
+  };
+
+  std::deque<MapFrame> frames_;
+  static constexpr size_t MAX_FRAMES = 20;
+
+  PointCloud transformPoints(const PointCloud& points, const Eigen::Matrix4f& transform) const;
 };
+
+}  // namespace kiss_icp_core

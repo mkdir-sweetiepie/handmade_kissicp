@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 CSV 파일을 이용한 KISS-ICP 궤적 시각화 (수정된 버전)
-pandas 호환성 문제 해결
+Times New Roman 폰트 + 투명도 개선
 """
 
 import pandas as pd
@@ -9,6 +9,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 import os
+
+# Times New Roman 폰트 설정
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 12
+plt.rcParams['mathtext.fontset'] = 'stix'  # 수학 기호도 Times New Roman 스타일로
 
 
 def visualize_trajectory_from_csv(csv_file, output_dir="./plots", show=False):
@@ -36,24 +41,30 @@ def visualize_trajectory_from_csv(csv_file, output_dir="./plots", show=False):
 
         # Figure 생성 (2x2 레이아웃)
         fig = plt.figure(figsize=(16, 12))
+        fig.patch.set_facecolor('white')
 
-        # 1. 2D 궤적 비교 - Y축 범위 제한
+        # 1. 2D 궤적 비교 - Y축 범위 제한 + 개선된 투명도
         ax1 = plt.subplot(2, 2, 1)
-        plt.plot(gt_x, gt_y, "g-", linewidth=3, label="Ground Truth", alpha=0.8)
-        plt.plot(est_x, est_y, "r--", linewidth=2, label="KISS-ICP", alpha=0.8)
-        plt.xlabel("X [m]", fontsize=12)
-        plt.ylabel("Y [m]", fontsize=12)
-        plt.title("Trajectory Comparison (Y: ±20m)", fontsize=14, fontweight="bold")
-        plt.legend(fontsize=11)
-        plt.grid(True, alpha=0.3)
+        
+        # Ground Truth를 더 두껍고 반투명하게
+        plt.plot(gt_x, gt_y, "g-", linewidth=4, label="Ground Truth", alpha=0.6, zorder=1)
+        
+        # KISS-ICP를 점선으로 더 얇게, 약간 더 진하게
+        plt.plot(est_x, est_y, "r--", linewidth=2.5, label="KISS-ICP", alpha=0.5, zorder=2)
+        
+        plt.xlabel("X [m]", fontsize=14, fontweight='bold')
+        plt.ylabel("Y [m]", fontsize=14, fontweight='bold')
+        plt.title("Trajectory Comparison (Y: ±20m)", fontsize=16, fontweight="bold")
+        plt.legend(fontsize=12, frameon=True, fancybox=True, shadow=True)
+        plt.grid(True, alpha=0.3, linewidth=0.8)
 
         # Y축 범위 제한
         plt.ylim(y_center - 20, y_center + 20)
 
         # 실제 궤적 범위를 점선으로 표시
         actual_y_min, actual_y_max = np.min(gt_y), np.max(gt_y)
-        plt.axhline(actual_y_min, color="blue", linestyle="--", alpha=0.5, linewidth=1)
-        plt.axhline(actual_y_max, color="blue", linestyle="--", alpha=0.5, linewidth=1)
+        plt.axhline(actual_y_min, color="blue", linestyle=":", alpha=0.7, linewidth=1.5)
+        plt.axhline(actual_y_max, color="blue", linestyle=":", alpha=0.7, linewidth=1.5)
 
         # 2. 오차 계산 및 히트맵 - Y축 범위 제한
         errors = np.sqrt(
@@ -66,23 +77,28 @@ def visualize_trajectory_from_csv(csv_file, output_dir="./plots", show=False):
             gt_y,
             c=errors,
             cmap="RdYlGn_r",
-            s=40,
+            s=50,
             alpha=0.8,
             edgecolors="black",
-            linewidth=0.3,
+            linewidth=0.5,
         )
-        plt.xlabel("X [m]", fontsize=12)
-        plt.ylabel("Y [m]", fontsize=12)
-        plt.title("Position Error Heatmap (Y: ±20m)", fontsize=14, fontweight="bold")
-        plt.colorbar(scatter, label="Error [m]")
-        plt.grid(True, alpha=0.3)
+        plt.xlabel("X [m]", fontsize=14, fontweight='bold')
+        plt.ylabel("Y [m]", fontsize=14, fontweight='bold')
+        plt.title("Position Error Heatmap (Y: ±20m)", fontsize=16, fontweight="bold")
+        
+        # 컬러바 폰트 크기 조정
+        cbar = plt.colorbar(scatter, label="Error [m]")
+        cbar.ax.tick_params(labelsize=11)
+        cbar.set_label("Error [m]", fontsize=12, fontweight='bold')
+        
+        plt.grid(True, alpha=0.3, linewidth=0.8)
 
         # Y축 범위 제한
         plt.ylim(y_center - 20, y_center + 20)
 
         # 실제 궤적 범위를 점선으로 표시
-        plt.axhline(actual_y_min, color="blue", linestyle="--", alpha=0.5, linewidth=1)
-        plt.axhline(actual_y_max, color="blue", linestyle="--", alpha=0.5, linewidth=1)
+        plt.axhline(actual_y_min, color="blue", linestyle=":", alpha=0.7, linewidth=1.5)
+        plt.axhline(actual_y_max, color="blue", linestyle=":", alpha=0.7, linewidth=1.5)
 
         # 3. 거리별 오차
         ax3 = plt.subplot(2, 2, 3)
@@ -94,38 +110,43 @@ def visualize_trajectory_from_csv(csv_file, output_dir="./plots", show=False):
             dz = gt_z[i] - gt_z[i - 1]
             distances[i] = distances[i - 1] + np.sqrt(dx**2 + dy**2 + dz**2)
 
-        plt.plot(distances, errors, "b-", linewidth=2, alpha=0.8)
-        plt.xlabel("Distance [m]", fontsize=12)
-        plt.ylabel("Position Error [m]", fontsize=12)
-        plt.title("Error vs Distance", fontsize=14, fontweight="bold")
-        plt.grid(True, alpha=0.3)
+        plt.plot(distances, errors, "b-", linewidth=2.5, alpha=0.8)
+        plt.xlabel("Distance [m]", fontsize=14, fontweight='bold')
+        plt.ylabel("Position Error [m]", fontsize=14, fontweight='bold')
+        plt.title("Error vs Distance", fontsize=16, fontweight="bold")
+        plt.grid(True, alpha=0.3, linewidth=0.8)
 
         # 4. 오차 히스토그램 및 통계
         ax4 = plt.subplot(2, 2, 4)
-        plt.hist(errors, bins=30, color="skyblue", alpha=0.7, edgecolor="black")
+        plt.hist(errors, bins=30, color="skyblue", alpha=0.7, edgecolor="black", linewidth=1)
         plt.axvline(
             np.mean(errors),
             color="red",
             linestyle="--",
-            linewidth=2,
+            linewidth=3,
+            alpha=0.8,
             label=f"Mean: {np.mean(errors):.4f}m",
         )
         plt.axvline(
             np.median(errors),
             color="green",
             linestyle="--",
-            linewidth=2,
+            linewidth=3,
+            alpha=0.8,
             label=f"Median: {np.median(errors):.4f}m",
         )
-        plt.xlabel("Position Error [m]", fontsize=12)
-        plt.ylabel("Frequency", fontsize=12)
-        plt.title("Error Distribution", fontsize=14, fontweight="bold")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
+        plt.xlabel("Position Error [m]", fontsize=14, fontweight='bold')
+        plt.ylabel("Frequency", fontsize=14, fontweight='bold')
+        plt.title("Error Distribution", fontsize=16, fontweight="bold")
+        plt.legend(fontsize=11, frameon=True, fancybox=True, shadow=True)
+        plt.grid(True, alpha=0.3, linewidth=0.8)
 
         # 전체 제목
         fig.suptitle(
-            "KISS-ICP Trajectory Evaluation Results", fontsize=16, fontweight="bold"
+            "KISS-ICP Trajectory Evaluation Results", 
+            fontsize=18, 
+            fontweight="bold",
+            y=0.95
         )
         plt.tight_layout()
 
@@ -145,7 +166,7 @@ def visualize_trajectory_from_csv(csv_file, output_dir="./plots", show=False):
 
         # 저장
         output_file = os.path.join(output_dir, "trajectory_analysis.png")
-        plt.savefig(output_file, dpi=300, bbox_inches="tight")
+        plt.savefig(output_file, dpi=300, bbox_inches="tight", facecolor='white')
         print(f"플롯 저장됨: {output_file}")
 
         if show:
@@ -162,7 +183,7 @@ def visualize_trajectory_from_csv(csv_file, output_dir="./plots", show=False):
 
 
 def create_kitti_style_report(csv_file, output_dir="./plots"):
-    """실제 KITTI 웹사이트 스타일 평가 리포트 생성"""
+    """실제 KITTI 웹사이트 스타일 평가 리포트 생성 - 개선된 투명도"""
 
     try:
         df = pd.read_csv(csv_file)
@@ -188,31 +209,31 @@ def create_kitti_style_report(csv_file, output_dir="./plots"):
             dz = gt_z[i] - gt_z[i - 1]
             distances[i] = distances[i - 1] + np.sqrt(dx**2 + dy**2 + dz**2)
 
-        # KITTI 웹사이트 스타일 - 매우 깔끔하고 단순하게
+        # KITTI 웹사이트 스타일 - Times New Roman 적용
         fig = plt.figure(figsize=(16, 10))
         fig.patch.set_facecolor("white")
-        
-        # 폰트 설정 - KITTI처럼 작고 깔끔하게
-        plt.rcParams.update({'font.size': 9})
 
-        # 1. 메인 궤적 플롯 (왼쪽 절반)
+        # 1. 메인 궤적 플롯 (왼쪽 절반) - 개선된 투명도
         ax1 = plt.subplot2grid((2, 4), (0, 0), colspan=2, rowspan=2)
         
         # Y축 중심점 및 범위 계산
         y_center = (np.max(gt_y) + np.min(gt_y)) / 2
         plt.ylim(y_center - 20, y_center + 20)
         
-        plt.plot(gt_x, gt_y, 'b-', linewidth=1.5, label='Ground truth', alpha=0.8)
-        plt.plot(est_x, est_y, 'r-', linewidth=1.5, label='KISS-ICP', alpha=0.8)
+        # Ground Truth를 더 두껍고 반투명하게
+        plt.plot(gt_x, gt_y, 'b-', linewidth=3, label='Ground truth', alpha=0.6, zorder=1)
         
-        plt.xlabel('x [m]', fontsize=10)
-        plt.ylabel('y [m]', fontsize=10)
-        plt.title('Sequence 00', fontsize=11, fontweight='normal')
-        plt.legend(fontsize=9, frameon=True, fancybox=False, shadow=False)
-        plt.grid(True, alpha=0.3, linewidth=0.5)
+        # KISS-ICP를 점선으로 더 진하게
+        plt.plot(est_x, est_y, 'r--', linewidth=2.5, label='KISS-ICP', alpha=0.9, zorder=2)
         
-        # 축 눈금 작게
-        plt.tick_params(axis='both', which='major', labelsize=8)
+        plt.xlabel('x [m]', fontsize=12, fontweight='bold')
+        plt.ylabel('y [m]', fontsize=12, fontweight='bold')
+        plt.title('Sequence 00', fontsize=14, fontweight='bold')
+        plt.legend(fontsize=11, frameon=True, fancybox=True, shadow=True)
+        plt.grid(True, alpha=0.3, linewidth=0.8)
+        
+        # 축 눈금 스타일 개선
+        plt.tick_params(axis='both', which='major', labelsize=10)
 
         # 2. 오차 테이블 (오른쪽 상단)
         ax2 = plt.subplot2grid((2, 4), (0, 2), colspan=2)
@@ -239,7 +260,7 @@ def create_kitti_style_report(csv_file, output_dir="./plots"):
                 # 전체 평균 오차를 거리로 나눈 값 사용
                 rpe_trans_errors.append(np.mean(errors) / dist * 100)
 
-        # KITTI 스타일 텍스트 정보
+        # KITTI 스타일 텍스트 정보 - Times New Roman 적용
         table_text = f"""EVALUATION RESULTS
 
 Method: KISS-ICP
@@ -264,28 +285,28 @@ Mean Error: {np.mean(errors):.4f}m
 Frames: {len(df)}
 """
         
-        ax2.text(0.05, 0.95, table_text, fontsize=9, fontfamily='monospace',
+        ax2.text(0.05, 0.95, table_text, fontsize=10, family='Times New Roman',
                  verticalalignment='top', transform=ax2.transAxes,
-                 bbox=dict(boxstyle='square,pad=0.3', facecolor='#f8f8f8', alpha=0.8))
+                 bbox=dict(boxstyle='round,pad=0.5', facecolor='#f8f8f8', alpha=0.9, edgecolor='gray'))
 
-        # 3. 오차 플롯 (오른쪽 하단)
+        # 3. 오차 플롯 (오른쪽 하단) - 개선된 스타일
         ax3 = plt.subplot2grid((2, 4), (1, 2), colspan=2)
         
-        plt.plot(distances, errors*100, 'b-', linewidth=1, alpha=0.8)  # cm 단위로
-        plt.xlabel('Path Length [m]', fontsize=10)
-        plt.ylabel('Translation Error [cm]', fontsize=10)
-        plt.title('Translation Error over Path Length', fontsize=11, fontweight='normal')
-        plt.grid(True, alpha=0.3, linewidth=0.5)
-        plt.tick_params(axis='both', which='major', labelsize=8)
+        plt.plot(distances, errors*100, 'b-', linewidth=2, alpha=0.8)  # cm 단위로
+        plt.xlabel('Path Length [m]', fontsize=12, fontweight='bold')
+        plt.ylabel('Translation Error [cm]', fontsize=12, fontweight='bold')
+        plt.title('Translation Error over Path Length', fontsize=14, fontweight='bold')
+        plt.grid(True, alpha=0.3, linewidth=0.8)
+        plt.tick_params(axis='both', which='major', labelsize=10)
         
         # 평균선 추가
         plt.axhline(y=np.mean(errors)*100, color='red', linestyle='--', 
-                   linewidth=1, alpha=0.7, label=f'Mean: {np.mean(errors)*100:.1f}cm')
-        plt.legend(fontsize=8)
+                   linewidth=2, alpha=0.8, label=f'Mean: {np.mean(errors)*100:.1f}cm')
+        plt.legend(fontsize=10, frameon=True, fancybox=True, shadow=True)
 
-        # 전체 제목 - KITTI 스타일로 단순하게
+        # 전체 제목 - Times New Roman 적용
         fig.suptitle('KITTI Odometry Benchmark - Visual Odometry / SLAM Evaluation', 
-                     fontsize=12, fontweight='normal', y=0.95)
+                     fontsize=14, fontweight='bold', y=0.95)
 
         plt.tight_layout()
         plt.subplots_adjust(top=0.90, hspace=0.3, wspace=0.3)
@@ -294,9 +315,6 @@ Frames: {len(df)}
         output_file = os.path.join(output_dir, "kitti_official_style.png")
         plt.savefig(output_file, dpi=300, bbox_inches="tight", facecolor='white')
         print(f"KITTI 공식 스타일 리포트 저장됨: {output_file}")
-
-        # 폰트 설정 원복
-        plt.rcParams.update({'font.size': 12})
 
         return fig
 
@@ -322,6 +340,8 @@ def main():
     args = parser.parse_args()
 
     print(f"CSV 파일 시각화 시작: {args.csv}")
+    print("폰트: Times New Roman 적용됨")
+    print("투명도 개선으로 궤적 가시성 향상")
 
     # 기본 시각화
     fig, errors, distances = visualize_trajectory_from_csv(

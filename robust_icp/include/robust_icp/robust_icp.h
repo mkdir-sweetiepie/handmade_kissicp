@@ -8,7 +8,7 @@
 class RobustICP {
  public:
   // 생성자: 스케일 파라미터와 최대 반복 횟수 설정
-  RobustICP(float scale_parameter = 0.1f, int max_iterations = 100, float convergence_criteria = 1e-4f);
+  RobustICP(float scale_parameter = 0.05f, int max_iterations = 20, float convergence_criteria = 1e-3f);
 
   // 강인한 ICP 실행: 두 포인트 클라우드 정합
   Eigen::Matrix4f align(const pcl::PointCloud<pcl::PointXYZ>::Ptr& source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr& target_cloud, float max_correspondence_distance,

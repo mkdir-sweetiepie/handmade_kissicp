@@ -13,6 +13,7 @@ bool compareVoxelKeys(const VoxelKey& a, const VoxelKey& b) {
 VoxelGrid::VoxelGrid(float size) : voxel_size(size) {}
 
 // 포인트로부터 복셀 키 계산 함수 구현
+// floor 함수를 사용하여 포인트의 좌표를 복셀 크기로 나눈 후 정수로 변환
 VoxelKey VoxelGrid::getVoxelKey(const pcl::PointXYZ& point) const {
   VoxelKey key;
   key.x = static_cast<int>(std::floor(point.x / voxel_size));
@@ -27,6 +28,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr VoxelGrid::downsample(const pcl::PointCloud<
   auto output = pcl::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
 
   // VoxelKey를 정렬 방식으로 비교하는 map 사용
+  // std::map<Key, Value, Compare>
   std::map<VoxelKey, pcl::PointXYZ, bool (*)(const VoxelKey&, const VoxelKey&)> voxel_map(compareVoxelKeys);
 
   // 모든 포인트에 대해
@@ -41,6 +43,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr VoxelGrid::downsample(const pcl::PointCloud<
   }
 
   // 결과 포인트 클라우드 구성
+  // reserve 메모리 공간을 미리 할당하여 성능 향상
   output->reserve(voxel_map.size());
   for (const auto& item : voxel_map) {
     output->push_back(item.second);

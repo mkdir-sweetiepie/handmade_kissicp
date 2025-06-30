@@ -1,36 +1,39 @@
 #include "kiss_icp_core/local_map.h"
 
-#include <cmath>
+#include <iostream>
 
-LocalMap::LocalMap(float voxel_size, int max_points, float max_range) : voxel_size_(voxel_size), max_points_per_voxel_(max_points), max_range_(max_range) {}
+namespace kiss_icp_core {
 
-LocalMapVoxelKey LocalMap::getVoxelKey(const Point3D& point) const {
-  return {static_cast<int>(std::floor(point.x / voxel_size_)), static_cast<int>(std::floor(point.y / voxel_size_)), static_cast<int>(std::floor(point.z / voxel_size_))};
-}
+LocalMap::LocalMap() { frames_.clear(); }
 
 void LocalMap::addPoints(const PointCloud& points, const Eigen::Matrix4f& pose) {
-  for (const auto& point : points) {
-    // Transform point to global frame
-    Eigen::Vector4f global_point = pose * Eigen::Vector4f(point.x, point.y, point.z, 1.0f);
-    Point3D global_pt(global_point.x(), global_point.y(), global_point.z());
+  MapFrame frame;
+  frame.points = points;
+  frame.pose = pose;
+  frame.timestamp = std::chrono::high_resolution_clock::now();
 
-    LocalMapVoxelKey key = getVoxelKey(global_pt);
+  frames_.push_back(frame);
 
-    // Add point if voxel isn't saturated
-    auto& voxel_points = voxel_map_[key];
-    if (voxel_points.size() < max_points_per_voxel_) {
-      voxel_points.push_back(global_pt);
-    }
+  // 최대 프레임 수 제한
+  if (frames_.size() > MAX_FRAMES) {
+    frames_.pop_front();
   }
+
+  std::cout << "[LocalMap] 프레임 추가됨, 총 프레임 수: " << frames_.size() << std::endl;
 }
 
-PointCloud LocalMap::getPointsInRange(const Eigen::Vector3f& center, float range) {
+PointCloud LocalMap::getPointsInRange(const Eigen::Vector3f& center, float max_range) const {
   PointCloud result;
 
-  for (const auto& [key, points] : voxel_map_) {
-    for (const auto& point : points) {
-      float distance = (point.toEigen() - center).norm();
-      if (distance <= range) {
+  for (const auto& frame : frames_) {
+    // 글로벌 좌표로 변환
+    PointCloud transformed = transformPoints(frame.points, frame.pose);
+
+    // 범위 내 포인트만 추가
+    for (const auto& point : transformed) {
+      Eigen::Vector3f point_pos(point.x, point.y, point.z);
+      float distance = (point_pos - center).norm();
+      if (distance <= max_range) {
         result.push_back(point);
       }
     }
@@ -39,33 +42,28 @@ PointCloud LocalMap::getPointsInRange(const Eigen::Vector3f& center, float range
   return result;
 }
 
-void LocalMap::removeDistantVoxels(const Eigen::Vector3f& robot_position) {
-  auto it = voxel_map_.begin();
-  while (it != voxel_map_.end()) {
-    // Check if any point in this voxel is within range
-    bool has_close_point = false;
-    for (const auto& point : it->second) {
-      float distance = (point.toEigen() - robot_position).norm();
-      if (distance <= max_range_) {
-        has_close_point = true;
-        break;
-      }
-    }
+PointCloud LocalMap::transformPoints(const PointCloud& points, const Eigen::Matrix4f& transform) const {
+  PointCloud transformed;
+  transformed.reserve(points.size());
 
-    if (!has_close_point) {
-      it = voxel_map_.erase(it);
-    } else {
-      ++it;
-    }
+  for (const auto& point : points) {
+    Eigen::Vector4f homogeneous(point.x, point.y, point.z, 1.0f);
+    Eigen::Vector4f transformed_point = transform * homogeneous;
+
+    transformed.emplace_back(transformed_point.x(), transformed_point.y(), transformed_point.z());
   }
+
+  return transformed;
 }
+
+void LocalMap::clear() { frames_.clear(); }
 
 size_t LocalMap::size() const {
-  size_t total = 0;
-  for (const auto& [key, points] : voxel_map_) {
-    total += points.size();
+  size_t total_points = 0;
+  for (const auto& frame : frames_) {
+    total_points += frame.points.size();
   }
-  return total;
+  return total_points;
 }
 
-void LocalMap::clear() { voxel_map_.clear(); }
+}  // namespace kiss_icp_core
